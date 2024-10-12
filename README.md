@@ -1,9 +1,9 @@
-**Name** : MAREEDU DHARSHA
-**Company** : CODTECH IT SOLUTIONS
-**ID** : CT08DS8195
-**Domain** : JAVA PROGRAMMING
-**Duration** : SEPTEMBER 15th, 2024 to OCTOBER 15th, 2024
-**Mentor** : MUZAMMIL
+### Name : MAREEDU DHARSHA
+### Company : CODTECH IT SOLUTIONS
+### ID : CT08DS8195
+### Domain : JAVA PROGRAMMING
+### Duration : SEPTEMBER 15th, 2024 to OCTOBER 15th, 2024
+### Mentor : MUZAMMIL
 
 ### Overview of the Project
 
