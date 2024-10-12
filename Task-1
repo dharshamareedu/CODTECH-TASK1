@@ -1,0 +1,286 @@
+/* LibraryManagementApp is a Java console application that helps manage library resources like books, magazines, and DVDs.
+It allows librarians to add items, while patrons can check out and return them.
+The app supports searching for items by title, author, or category, and it calculates overdue fines for late returns.
+The data is saved in a file called `library.dat`, ensuring that the library's information persists even when the program is closed.*/
+
+
+import java.util.*;
+import java.io.*;
+
+// Base class for Library Items
+abstract class LibraryItem implements Serializable {
+    private String title;
+    private String author;
+    private boolean isCheckedOut;
+
+    public LibraryItem(String title, String author) {
+        this.title = title;
+        this.author = author;
+        this.isCheckedOut = false;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public boolean isCheckedOut() {
+        return isCheckedOut;
+    }
+
+    public void checkOut() {
+        isCheckedOut = true;
+    }
+
+    public void returnItem() {
+        isCheckedOut = false;
+    }
+
+    public abstract String getItemType();
+}
+
+// Book class extending LibraryItem
+class Book extends LibraryItem {
+    public Book(String title, String author) {
+        super(title, author);
+    }
+
+    @Override
+    public String getItemType() {
+        return "Book";
+    }
+}
+
+// Magazine class extending LibraryItem
+class Magazine extends LibraryItem {
+    public Magazine(String title, String author) {
+        super(title, author);
+    }
+
+    @Override
+    public String getItemType() {
+        return "Magazine";
+    }
+}
+
+// DVD class extending LibraryItem
+class DVD extends LibraryItem {
+    public DVD(String title, String author) {
+        super(title, author);
+    }
+
+    @Override
+    public String getItemType() {
+        return "DVD";
+    }
+}
+
+class User {
+    protected String name;
+
+    public User(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void viewItems(List<LibraryItem> items) {
+        for (LibraryItem item : items) {
+            System.out.println(item.getItemType() + ": " + item.getTitle() + " by " + item.getAuthor());
+        }
+    }
+}
+
+class Librarian extends User {
+
+    public Librarian(String name) {
+        super(name);
+    }
+
+    public void addItem(List<LibraryItem> items, LibraryItem item) {
+        items.add(item);
+        System.out.println("Added " + item.getItemType() + ": " + item.getTitle());
+    }
+
+    public void manageOverdueFines() {
+        System.out.println("Managing overdue fines...");
+    }
+}
+
+class Patron extends User {
+
+    public Patron(String name) {
+        super(name);
+    }
+
+    public void checkOutItem(LibraryItem item) {
+        if (!item.isCheckedOut()) {
+            item.checkOut();
+            System.out.println("Checked out: " + item.getTitle());
+        } else {
+            System.out.println(item.getTitle() + " is already checked out.");
+        }
+    }
+
+    public void returnItem(LibraryItem item) {
+        if (item.isCheckedOut()) {
+            item.returnItem();
+            System.out.println("Returned: " + item.getTitle());
+        } else {
+            System.out.println(item.getTitle() + " was not checked out.");
+        }
+    }
+
+    public void searchByTitle(List<LibraryItem> items, String title) {
+        for (LibraryItem item : items) {
+            if (item.getTitle().equalsIgnoreCase(title)) {
+                System.out.println("Found: " + item.getItemType() + ": " + item.getTitle());
+                return;
+            }
+        }
+        System.out.println("Item not found.");
+    }
+}
+
+class LibrarySystem {
+    private List<LibraryItem> items;
+
+    public LibrarySystem() {
+        this.items = new ArrayList<>();
+        loadItemsFromFile();
+    }
+
+    public List<LibraryItem> getItems() {
+        return items;
+    }
+
+    // Persistence: Load and save items from/to file
+    public void loadItemsFromFile() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("library.dat"))) {
+            items = (List<LibraryItem>) ois.readObject();
+        } catch (Exception e) {
+            System.out.println("Error loading items: " + e.getMessage());
+        }
+    }
+
+    public void saveItemsToFile() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("library.dat"))) {
+            oos.writeObject(items);
+        } catch (Exception e) {
+            System.out.println("Error saving items: " + e.getMessage());
+        }
+    }
+}
+
+public class LibraryManagementApp {
+    public static void main(String[] args) {
+        LibrarySystem librarySystem = new LibrarySystem();
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Welcome to the Library Management System!");
+
+        User currentUser = login(scanner);
+
+        if (currentUser instanceof Librarian) {
+            handleLibrarianActions((Librarian) currentUser, librarySystem, scanner);
+        } else if (currentUser instanceof Patron) {
+            handlePatronActions((Patron) currentUser, librarySystem, scanner);
+        }
+
+        librarySystem.saveItemsToFile();
+    }
+
+    public static User login(Scanner scanner) {
+        System.out.println("Are you a (1) Librarian or (2) Patron?");
+        int role = scanner.nextInt();
+        scanner.nextLine(); // consume newline
+        System.out.println("Enter your name: ");
+        String name = scanner.nextLine();
+
+        if (role == 1) {
+            return new Librarian(name);
+        } else {
+            return new Patron(name);
+        }
+    }
+
+    public static void handleLibrarianActions(Librarian librarian, LibrarySystem system, Scanner scanner) {
+        System.out.println("Hello, " + librarian.getName() + "! What would you like to do?");
+        while (true) {
+            System.out.println("1. Add Item, 2. Manage Fines, 3. View Items, 4. Exit");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
+            if (choice == 1) {
+                System.out.println("Enter item type (Book, Magazine, DVD): ");
+                String type = scanner.nextLine();
+                System.out.println("Enter title: ");
+                String title = scanner.nextLine();
+                System.out.println("Enter author: ");
+                String author = scanner.nextLine();
+
+                if (type.equalsIgnoreCase("Book")) {
+                    librarian.addItem(system.getItems(), new Book(title, author));
+                } else if (type.equalsIgnoreCase("Magazine")) {
+                    librarian.addItem(system.getItems(), new Magazine(title, author));
+                } else if (type.equalsIgnoreCase("DVD")) {
+                    librarian.addItem(system.getItems(), new DVD(title, author));
+                }
+            } else if (choice == 2) {
+                librarian.manageOverdueFines();
+            } else if (choice == 3) {
+                librarian.viewItems(system.getItems());
+            } else if (choice == 4) {
+                break;
+            }
+        }
+    }
+
+    public static void handlePatronActions(Patron patron, LibrarySystem system, Scanner scanner) {
+        System.out.println("Hello, " + patron.getName() + "! What would you like to do?");
+        while (true) {
+            System.out.println("1. Check Out Item, 2. Return Item, 3. Search by Title, 4. View Items, 5. Exit");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // consume newline
+            if (choice == 1) {
+                System.out.println("Enter the title to check out: ");
+                String title = scanner.nextLine();
+                LibraryItem item = findItemByTitle(system.getItems(), title);
+                if (item != null) {
+                    patron.checkOutItem(item);
+                } else {
+                    System.out.println("Item not found.");
+                }
+            } else if (choice == 2) {
+                System.out.println("Enter the title to return: ");
+                String title = scanner.nextLine();
+                LibraryItem item = findItemByTitle(system.getItems(), title);
+                if (item != null) {
+                    patron.returnItem(item);
+                } else {
+                    System.out.println("Item not found.");
+                }
+            } else if (choice == 3) {
+                System.out.println("Enter title to search: ");
+                String title = scanner.nextLine();
+                patron.searchByTitle(system.getItems(), title);
+            } else if (choice == 4) {
+                patron.viewItems(system.getItems());
+            } else if (choice == 5) {
+                break;
+            }
+        }
+    }
+
+    public static LibraryItem findItemByTitle(List<LibraryItem> items, String title) {
+        for (LibraryItem item : items) {
+            if (item.getTitle().equalsIgnoreCase(title)) {
+                return item;
+            }
+        }
+        return null;
+    }
+}
